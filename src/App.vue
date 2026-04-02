@@ -10,15 +10,21 @@ import { RouterView } from 'vue-router'
 // Import the auth store
 import { useAuthStore } from './stores/authStore'
 
+// Import the theme composable
+import { useTheme } from './composables/useTheme'
+
 // Import onMounted — runs code after the component is mounted to the DOM
 import { onMounted } from 'vue'
 
 // Get the auth store instance
 const authStore = useAuthStore()
 
-// When the app first loads, initialize the auth state
-// This checks if the user is already logged in from a previous session
+// Get the theme initializer
+const { initTheme } = useTheme()
+
+// When the app first loads, initialize auth state and apply saved theme
 onMounted(() => {
   authStore.init()
+  initTheme()
 })
 </script>

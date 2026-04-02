@@ -49,6 +49,40 @@ export const useAuthStore = defineStore('auth', () => {
         if (error) console.error('Google sign in error:', error)
     }
 
+    // Function to sign in with email and password
+    async function signInWithEmail(email, password) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        return { error }
+    }
+
+    // Function to create a new account with email and password
+    async function signUpWithEmail(email, password) {
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                // Redirect to projects after confirming email
+                emailRedirectTo: `${window.location.origin}/projects`
+            }
+        })
+        return { error }
+    }
+
+    // Function to send a password reset email
+    async function sendPasswordReset(email) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            // Redirect to the reset password page after clicking the link
+            redirectTo: `${window.location.origin}/reset-password`
+        })
+        return { error }
+    }
+
+    // Function to update the user's password (used on the reset password page)
+    async function updatePassword(newPassword) {
+        const { error } = await supabase.auth.updateUser({ password: newPassword })
+        return { error }
+    }
+
     // Function to sign out
     async function signOut() {
         const { error } = await supabase.auth.signOut()
@@ -59,5 +93,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     // Expose these so components can use them
-    return { user, loading, init, signInWithGoogle, signOut }
+    return { user, loading, init, signInWithGoogle, signInWithEmail, signUpWithEmail, sendPasswordReset, updatePassword, signOut }
 })

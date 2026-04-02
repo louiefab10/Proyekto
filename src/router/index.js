@@ -17,6 +17,12 @@ const routes = [
         meta: {requiresGuest: true}
     },
     {
+        path: '/reset-password',
+        name: 'ResetPassword',
+        component: () => import('../views/auth/ResetPassword.vue')
+        // No meta guard — must be reachable via the email link without a full session
+    },
+    {
         path: '/projects',
         name: 'Projects',
         component: () => import('../views/projects/Projects.vue'),

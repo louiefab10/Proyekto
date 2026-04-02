@@ -13,6 +13,16 @@ import { createPinia } from 'pinia'
 // Import our global CSS file which includes Tailwind
 import './style.css'
 
+// Apply dark mode class based on system preference
+if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.classList.add('dark')
+}
+
+// Listen for system dark mode changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    document.documentElement.classList.toggle('dark', e.matches)
+})
+
 // Create the Vue app instance
 const app = createApp(App)
 
