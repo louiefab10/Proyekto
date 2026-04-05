@@ -13,11 +13,8 @@
         @click="showModal = true"
         class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="7" y1="1" x2="7" y2="13"/>
-          <line x1="1" y1="7" x2="13" y2="7"/>
-        </svg>
-        New project
+        <i class="pi pi-folder-plus" />
+        Add new project
       </button>
     </div>
 
@@ -43,9 +40,10 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Create your first project to get started</p>
       <button
         @click="showModal = true"
-        class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-colors"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-colors"
       >
-        New project
+        <i class="pi pi-folder-plus" />
+        Add new project
       </button>
     </div>
 

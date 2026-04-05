@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen relative">
+  <div class="min-h-screen md:h-screen flex flex-col md:flex-row bg-blue-100 dark:bg-gray-950 relative">
 
     <!-- Theme toggle — top-right of the login page -->
     <div class="absolute top-4 right-4 z-10">
@@ -7,7 +7,7 @@
     </div>
 
     <!-- Left panel: branding -->
-    <div class="hidden md:flex md:w-1/2 bg-white dark:bg-gray-900 p-12 flex-col justify-between">
+    <div class="flex flex-col gap-8 md:gap-0 md:w-1/2 md:justify-between bg-blue-100 dark:bg-gray-950 md:bg-white md:dark:bg-gray-900 p-8 md:p-12">
       <!-- Logo -->
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
@@ -44,8 +44,11 @@
       </div>
     </div>
 
+    <!-- Mobile divider -->
+    <div class="md:hidden h-px bg-gray-200 dark:bg-gray-800 mx-8" />
+
     <!-- Right panel: auth forms -->
-    <div class="w-full md:w-1/2 bg-blue-100 dark:bg-gray-950 p-12 flex flex-col justify-center">
+    <div class="md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
       <div class="max-w-sm mx-auto w-full">
 
         <!-- ── VIEW: login ── -->
@@ -251,13 +254,14 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, getCurrentInstance } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 import ThemeToggle from '../../components/ThemeToggle.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { proxy } = getCurrentInstance()
 
 // ── View state ──
 // Controls which panel is shown: 'login' | 'signup' | 'forgot-password' | 'check-email'
@@ -300,6 +304,16 @@ async function handleSignIn() {
   const { error } = await authStore.signInWithEmail(email.value, password.value)
   loading.value = false
   if (error) { formError.value = error.message; return }
+
+  proxy.$swal({
+    icon: 'success',
+    title: 'Welcome back!',
+    theme: 'auto',
+    position: 'center',
+    showConfirmButton: false,
+    timer: 2000,
+  })
+
   router.push('/projects')
 }
 

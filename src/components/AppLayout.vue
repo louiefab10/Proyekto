@@ -1,8 +1,8 @@
 <template>
   <div class="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
 
-    <!-- ── Sidebar ── -->
-    <aside class="w-72 shrink-0 flex flex-col bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800">
+    <!-- ── Sidebar (desktop only) ── -->
+    <aside class="hidden md:flex w-72 shrink-0 flex-col bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800">
 
       <!-- Logo -->
       <div class="flex items-center gap-3 px-5 py-5">
@@ -62,15 +62,85 @@
     </aside>
 
     <!-- ── Main content ── -->
-    <main class="flex-1 overflow-auto">
+    <main class="flex-1 overflow-auto pb-16 md:pb-0">
       <slot />
     </main>
+
+    <!-- ── Bottom nav (mobile only) ── -->
+    <nav class="fixed bottom-0 left-0 right-0 z-40 flex md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+      <RouterLink
+        v-for="item in navItems"
+        :key="item.path"
+        :to="item.path"
+        class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors"
+        :class="isActive(item.path)
+          ? 'text-blue-500'
+          : 'text-gray-400 dark:text-gray-500'"
+      >
+        <span class="flex items-center justify-center" v-html="item.icon" />
+        {{ item.label }}
+      </RouterLink>
+
+      <!-- Account tab -->
+      <button
+        @click="accountSheet = !accountSheet"
+        class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors"
+        :class="accountSheet ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500'"
+      >
+        <div
+          class="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] font-semibold leading-none"
+        >
+          {{ userInitials }}
+        </div>
+        Account
+      </button>
+    </nav>
+
+    <!-- ── Account sheet (mobile) ── -->
+    <Teleport to="body">
+      <div
+        v-if="accountSheet"
+        class="fixed inset-0 z-30 md:hidden"
+        @click="accountSheet = false"
+      />
+      <div
+        v-if="accountSheet"
+        class="fixed bottom-16 left-3 right-3 z-40 md:hidden bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl p-4"
+      >
+        <!-- User row -->
+        <div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-100 dark:border-gray-800">
+          <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+            {{ userInitials }}
+          </div>
+          <span class="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">{{ displayName }}</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center justify-between px-2 py-2 rounded-lg">
+            <span class="text-sm text-gray-700 dark:text-gray-300">Theme</span>
+            <ThemeToggle />
+          </div>
+          <button
+            @click="accountSheet = false; handleSignOut()"
+            class="flex items-center gap-3 w-full px-2 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </div>
+    </Teleport>
 
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, getCurrentInstance } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import ThemeToggle from './ThemeToggle.vue'
@@ -78,10 +148,24 @@ import ThemeToggle from './ThemeToggle.vue'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { proxy } = getCurrentInstance()
+
+const accountSheet = ref(false)
 
 async function handleSignOut() {
-  await authStore.signOut()
-  router.push('/login')
+  const result = await proxy.$swal({
+    title: 'Sign out?',
+    text: 'You will be returned to the login page.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sign out',
+    cancelButtonText: 'Cancel',
+  })
+
+  if (result.isConfirmed) {
+    await authStore.signOut()
+    router.push('/login')
+  }
 }
 
 // Nav items with inline SVG icons

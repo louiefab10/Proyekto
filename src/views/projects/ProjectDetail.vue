@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="px-8 py-8 max-w-5xl">
+    <div class="px-8 py-8">
 
       <!-- ── Loading ── -->
       <div v-if="store.loading" class="flex flex-col gap-4">
@@ -56,120 +56,99 @@
           >
             {{ tab.label }}
           </button>
+          <button
+            v-if="activeTab === 'tasks'"
+            @click="openTaskModal()"
+            class="ml-auto flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <i class="pi pi-plus" />
+            Add new task
+          </button>
         </div>
 
         <!-- ── Tasks tab ── -->
         <div v-if="activeTab === 'tasks'">
-
-          <!-- Toolbar -->
-          <div class="flex items-center gap-2 mb-5 flex-wrap">
-            <span class="text-sm text-gray-400">Sort by</span>
-
-            <button
-              v-for="sf in sortFields"
-              :key="sf.value"
-              @click="toggleSort(sf.value)"
-              class="flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium border transition-colors"
-              :class="sortField === sf.value
-                ? 'border-blue-500 text-blue-400 bg-blue-500/10'
-                : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500'"
+          <div class="app-table rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <DataTable
+              :value="sortedTasks"
+              unstyled
+              sort-mode="single"
+              :sort-field="sortField"
+              :sort-order="sortOrder"
+              @sort="handleSort"
+              @row-click="openTaskModal($event.data)"
+              :pt="{ table: { class: 'w-full' } }"
             >
-              {{ sf.label }}
-              <span v-if="sortField === sf.value">{{ sortDirection === 'desc' ? '↓' : '↑' }}</span>
-            </button>
+              <!-- Checkbox -->
+              <Column :pt="{ headerCell: { class: 'w-12 px-4 py-5' }, bodyCell: { class: 'px-4 py-3.5' } }">
+                <template #body="{ data }">
+                  <button
+                    @click.stop="store.toggleTaskComplete(data)"
+                    class="w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0"
+                    :class="data.status === 'completed'
+                      ? 'bg-blue-500 border-blue-500'
+                      : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'"
+                  >
+                    <svg v-if="data.status === 'completed'" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </template>
+              </Column>
 
-            <button
-              @click="showAddTask = true"
-              class="ml-auto flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/>
-              </svg>
-              Add task
-            </button>
-          </div>
+              <!-- Title -->
+              <Column field="title" header="Task" sortable>
+                <template #body="{ data }">
+                  <span
+                    class="text-sm"
+                    :class="data.status === 'completed'
+                      ? 'line-through text-gray-400 dark:text-gray-500'
+                      : 'text-gray-900 dark:text-gray-100'"
+                  >
+                    {{ data.title }}
+                  </span>
+                </template>
+              </Column>
 
-          <!-- Table -->
-          <div class="rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-            <table class="w-full">
-              <thead>
-                <tr class="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-                  <th class="w-12 px-4 py-3"></th>
-                  <th class="px-3 py-3 text-left text-xs font-medium text-gray-400">Task</th>
-                  <th class="px-3 py-3 text-left text-xs font-medium text-gray-400">Priority</th>
-                  <th class="px-3 py-3 text-left text-xs font-medium text-gray-400">Status</th>
-                  <th class="px-3 py-3 text-left text-xs font-medium text-gray-400">Due date</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="task in sortedTasks"
-                  :key="task.id"
-                  @click="selectedTask = task"
-                  class="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-colors"
-                >
-                  <!-- Checkbox -->
-                  <td class="px-4 py-3.5">
-                    <button
-                      @click.stop="store.toggleTaskComplete(task)"
-                      class="w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0"
-                      :class="task.status === 'completed'
-                        ? 'bg-blue-500 border-blue-500'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'"
-                    >
-                      <svg v-if="task.status === 'completed'" width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                  </td>
+              <!-- Priority -->
+              <Column field="priority" header="Priority" sortable>
+                <template #body="{ data }">
+                  <span class="text-xs font-medium px-2 py-0.5 rounded" :class="priorityClass(data.priority)">
+                    {{ data.priority }}
+                  </span>
+                </template>
+              </Column>
 
-                  <!-- Title -->
-                  <td class="px-3 py-3.5">
-                    <span
-                      class="text-sm"
-                      :class="task.status === 'completed'
-                        ? 'line-through text-gray-400 dark:text-gray-500'
-                        : 'text-gray-900 dark:text-gray-100'"
-                    >
-                      {{ task.title }}
-                    </span>
-                  </td>
+              <!-- Status -->
+              <Column field="status" header="Status" sortable>
+                <template #body="{ data }">
+                  <span class="text-xs font-medium px-2 py-0.5 rounded" :class="statusClass(data.status)">
+                    {{ data.status.replace('_', ' ') }}
+                  </span>
+                </template>
+              </Column>
 
-                  <!-- Priority -->
-                  <td class="px-3 py-3.5">
-                    <span class="text-xs font-medium px-2 py-0.5 rounded" :class="priorityClass(task.priority)">
-                      {{ task.priority }}
-                    </span>
-                  </td>
+              <!-- Due date -->
+              <Column field="due_date" header="Due date" sortable>
+                <template #body="{ data }">
+                  <span
+                    class="text-sm"
+                    :class="data.status !== 'completed' && isOverdue(data.due_date)
+                      ? 'text-red-400'
+                      : 'text-gray-400'"
+                  >
+                    {{ data.due_date ? formatDate(data.due_date) : '—' }}
+                  </span>
+                </template>
+              </Column>
 
-                  <!-- Status -->
-                  <td class="px-3 py-3.5">
-                    <span class="text-xs font-medium px-2 py-0.5 rounded" :class="statusClass(task.status)">
-                      {{ task.status.replace('_', ' ') }}
-                    </span>
-                  </td>
-
-                  <!-- Due date -->
-                  <td class="px-3 py-3.5">
-                    <span
-                      class="text-sm"
-                      :class="task.status !== 'completed' && isOverdue(task.due_date)
-                        ? 'text-red-400'
-                        : 'text-gray-400'"
-                    >
-                      {{ task.due_date ? formatDate(task.due_date) : '—' }}
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- Empty state -->
-                <tr v-if="sortedTasks.length === 0">
-                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">
-                    No tasks yet — add one to get started.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+              <!-- Empty state -->
+              <template #empty>
+                <div class="px-4 py-8 text-center text-sm text-gray-400">
+                  No tasks yet — add one to get started.
+                </div>
+              </template>
+            </DataTable>
           </div>
         </div>
 
@@ -298,23 +277,24 @@
 
     </div>
 
-    <!-- ── Add task modal ── -->
+    <!-- ── Task modal (create & edit) ── -->
     <Teleport to="body">
       <div
-        v-if="showAddTask"
+        v-if="taskModal.open"
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-        @click.self="showAddTask = false"
+        @click.self="taskModal.open = false"
       >
-        <div class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl border
-        border-gray-100 dark:border-gray-800 shadow-xl p-6">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-5">Add task</h2>
+        <div class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl p-6">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-5">
+            {{ taskModal.task ? 'Edit task' : 'Add task' }}
+          </h2>
 
-          <form @submit.prevent="submitAddTask" class="flex flex-col gap-4">
+          <form @submit.prevent="submitTaskModal" class="flex flex-col gap-4">
 
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Title <span class="text-red-400">*</span></label>
               <input
-                v-model="newTaskTitle"
+                v-model="taskForm.title"
                 type="text"
                 placeholder="Task title"
                 autofocus
@@ -326,10 +306,8 @@
               <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Priority</label>
                 <select
-                  v-model="newTaskPriority"
-                  class="w-full rounded-lg border border-gray-200
-                  dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm
-                  text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  v-model="taskForm.priority"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -340,10 +318,8 @@
               <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Status</label>
                 <select
-                  v-model="newTaskStatus"
-                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700
-                  bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900
-                  dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  v-model="taskForm.status"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="not_started">Not started</option>
                   <option value="in_progress">In progress</option>
@@ -355,39 +331,38 @@
             <div class="flex flex-col gap-1.5">
               <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Due date</label>
               <input
-                v-model="newTaskDueDate"
+                v-model="taskForm.due_date"
                 type="date"
-                class="w-full rounded-lg border border-gray-200
-                dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm
-                text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Note <span class="text-gray-600">(optional)</span></label>
+              <label class="text-xs font-me dium text-gray-400 uppercase tracking-wide">Note <span class="text-gray-600">(optional)</span></label>
               <textarea
-                  v-model="newTaskNote"
-                  placeholder="Add an initial note..."
-                  rows="2"
-                  class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                v-model="taskForm.note"
+                placeholder="Add a note..."
+                rows="2"
+                class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
-
 
             <div class="flex items-center justify-end gap-2 pt-1">
               <button
                 type="button"
-                @click="showAddTask = false"
+                @click="taskModal.open = false"
                 class="px-4 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                :disabled="!newTaskTitle.trim()"
-                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="!taskForm.title.trim()"
+                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transitioncolors disabled:opacity-50 disabled:cursor-not-allowed"
+
               >
-                Add task
+                <i class="pi pi-save" />
+                {{ taskSaving ? 'Saving...' : (taskModal.task ? 'Save changes' : 'Add task')}}
               </button>
             </div>
 
@@ -396,86 +371,24 @@
       </div>
     </Teleport>
 
-    <!--Show task modal -->
-    <Teleport to="body">
-      <div v-if="selectedTask"
-           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-           @click.self="selectedTask = null">
-        <div class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl border
-        border-gray-100 dark:border-gray-800 shadow-xl p-6">
-          <h2 class="text-lg font-semibold text-white mb-5">{{ selectedTask.title }}</h2>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Priority</label>
-              <select v-model="selectedTask.priority"
-                      class="w-full rounded-lg border border-gray-200
-                  dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm
-                  text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      @change="store.updateTask(selectedTask.id, { priority: selectedTask.priority })">
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Status</label>
-              <select v-model="selectedTask.status"
-                      class="w-full rounded-lg border border-gray-200 dark:border-gray-700
-                  bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900
-                  dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      @change="store.updateTask(selectedTask.id, { status: selectedTask.status })">
-                <option value="not_started">Not started</option>
-                <option value="in_progress">In progress</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Due Date</label>
-            <input type="date"
-                   class="w-full rounded-lg border border-gray-200
-                dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm
-                text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   v-model="selectedTask.due_date" @change="store.updateTask(selectedTask.id, { due_date: selectedTask.due_date })" />
-
-          </div>
-
-
-          <!-- Task-specific notes -->
-          <div class="mt-4">
-            <p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Notes</p>
-
-            <textarea v-model="taskNoteContent" placeholder="Add a note..." class="w-full bg-gray-800 rounded-lg px-3 py-2 text-sm text-white resize-none" rows="2" />
-            <button @click="saveTaskNote" class="mt-2 px-3 py-1.5 bg-blue-600 rounded-lg text-sm text-white">Save</button>
-          </div>
-
-        </div>
-      </div>
-    </Teleport>
-
-
   </AppLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import AppLayout from '../../components/AppLayout.vue'
 import { useProjectDetailStore } from '../../stores/projectDetailStore'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
 
 const route = useRoute()
 const store = useProjectDetailStore()
-
 
 onMounted(() => store.fetchProject(route.params.id))
 
 // ── Tabs ──
 const activeTab = ref('tasks')
-const selectedTask = ref(null)
 const tabs = [
   { id: 'tasks', label: 'Tasks' },
   { id: 'notes', label: 'Notes' },
@@ -492,23 +405,14 @@ const progressPct    = computed(() =>
 // ── Sorting ──
 const sortField     = ref('priority')
 const sortDirection = ref('desc')
-
-const sortFields = [
-  { value: 'priority', label: 'Priority' },
-  { value: 'due_date', label: 'Due date' },
-  { value: 'status',   label: 'Status'   },
-]
+const sortOrder     = computed(() => sortDirection.value === 'asc' ? 1 : -1)
 
 const PRIORITY_ORDER = { urgent: 4, high: 3, medium: 2, low: 1 }
 const STATUS_ORDER   = { not_started: 1, in_progress: 2, completed: 3 }
 
-function toggleSort(field) {
-  if (sortField.value === field) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortField.value = field
-    sortDirection.value = 'asc'
-  }
+function handleSort(event) {
+  sortField.value     = event.sortField
+  sortDirection.value = event.sortOrder === 1 ? 'asc' : 'desc'
 }
 
 const sortedTasks = computed(() => {
@@ -532,7 +436,7 @@ const sortedTasks = computed(() => {
 function priorityClass(priority) {
   const map = {
     urgent: 'bg-red-950 text-red-300',
-    high:   'bg-amber-900 text-amber-300',
+    high:   'bg-red-700 text-red-300',
     medium: 'bg-indigo-900 text-indigo-300',
     low:    'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
   }
@@ -559,29 +463,41 @@ function isOverdue(dateStr) {
   return new Date(dateStr) < new Date()
 }
 
-// ── Add task ──
-const showAddTask     = ref(false)
-const newTaskTitle    = ref('')
-const newTaskPriority = ref('medium')
-const newTaskStatus   = ref('not_started')
-const newTaskDueDate  = ref('')
-const newTaskNote = ref('')
-async function submitAddTask() {
-  if (!newTaskTitle.value.trim()) return
-  await store.addTask({
-    title:    newTaskTitle.value.trim(),
-    priority: newTaskPriority.value,
-    status:   newTaskStatus.value,
-    due_date: newTaskDueDate.value || null,
-    note: newTaskNote.value.trim() || null
-  })
+const taskSaving = ref(false)
 
-  showAddTask.value     = false
-  newTaskTitle.value    = ''
-  newTaskPriority.value = 'medium'
-  newTaskStatus.value   = 'not_started'
-  newTaskDueDate.value  = ''
-  newTaskNote.value = ''
+// ── Task modal ──
+const taskModal = ref({ open: false, task: null })
+const taskForm  = ref({ title: '', priority: '', status: '', due_date: '', note: '' })
+
+function openTaskModal(task = null) {
+  taskModal.value = { open: true, task }
+  taskForm.value = task
+    ? { title: task.title, priority: task.priority, status: task.status, due_date: task.due_date ?? '', note: task.note ?? '' }
+    : { title: '', priority: '', status: '', due_date: '', note: '' }
+}
+
+async function submitTaskModal() {
+  if (!taskForm.value.title.trim()) return
+  const payload = {
+    title:    taskForm.value.title.trim(),
+    priority: taskForm.value.priority,
+    status:   taskForm.value.status,
+    due_date: taskForm.value.due_date || null,
+    note:     taskForm.value.note.trim() || null,
+  }
+  taskSaving.value = true
+  try {
+    if (taskModal.value.task) {
+      await store.updateTask(taskModal.value.task.id, payload)
+    } else {
+      await store.addTask(payload)
+    }
+    taskModal.value = { open: false, task: null }
+  }
+  finally{
+    taskSaving.value = false
+  }
+
 }
 
 // ── Add note ──
@@ -593,18 +509,6 @@ async function submitAddNote() {
   await store.addNote(newNoteContent.value.trim())
   showAddNote.value    = false
   newNoteContent.value = ''
-}
-
-const taskNoteContent = ref('')
-
-
-
-watch(selectedTask, (task) => {
-  taskNoteContent.value = task?.note ?? ''
-})
-
-async function saveTaskNote() {
-  await store.updateTask(selectedTask.value.id, { note: taskNoteContent.value })
 }
 
 // ── Available tags (not yet on this project) ──
