@@ -22,7 +22,7 @@ export const useTaskStore = defineStore('tasks', () => {
         loading.value = false
     }
 
-    async function addTask({ projectId, title, priority = 'medium', status = 'not_started', due_date = null, note = null }) {
+    async function addTask({ projectId, title, priority = 'medium', status = 'not_started', due_date = null, description = null, note = null }) {
         const authStore = useAuthStore()
 
         const { data, error } = await supabase
@@ -34,6 +34,7 @@ export const useTaskStore = defineStore('tasks', () => {
                 priority,
                 status,
                 due_date,
+                description,
                 note,
             })
             .select('*, projects(id, name)')

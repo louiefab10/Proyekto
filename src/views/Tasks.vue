@@ -118,6 +118,16 @@
               />
             </div>
 
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Description <span class="text-gray-600">(optional)</span></label>
+              <textarea
+                v-model="taskForm.description"
+                placeholder="Add a description..."
+                rows="2"
+                class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+            </div>
+
             <div class="grid grid-cols-2 gap-3">
               <div class="flex flex-col gap-1.5">
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Priority</label>
@@ -207,14 +217,14 @@ onMounted(() => {
 
 // ── Task modal ──
 const taskModal  = ref({ open: false, task: null })
-const taskForm   = ref({ projectId: '', title: '', priority: 'medium', status: 'not_started', due_date: '', note: '' })
+const taskForm   = ref({ projectId: '', title: '', priority: 'medium', status: 'not_started', due_date: '', description: '', note: '' })
 const taskSaving = ref(false)
 
 function openTaskModal(task = null) {
   taskModal.value = { open: true, task }
   taskForm.value = task
-    ? { projectId: task.project_id, title: task.title, priority: task.priority, status: task.status, due_date: task.due_date ?? '', note: task.note ?? '' }
-    : { projectId: '', title: '', priority: 'medium', status: 'not_started', due_date: '', note: '' }
+    ? { projectId: task.project_id, title: task.title, priority: task.priority, status: task.status, due_date: task.due_date ?? '', description: task.description ?? '', note: task.note ?? '' }
+    : { projectId: '', title: '', priority: 'medium', status: 'not_started', due_date: '', description: '', note: '' }
 }
 
 async function submitTaskModal() {
@@ -223,20 +233,22 @@ async function submitTaskModal() {
   try {
     if (taskModal.value.task) {
       await store.updateTask(taskModal.value.task.id, {
-        title:    taskForm.value.title.trim(),
-        priority:   taskForm.value.priority,
-        status:     taskForm.value.status,
-        due_date:   taskForm.value.due_date || null,
-        note:       taskForm.value.note.trim() || null,
+        title:       taskForm.value.title.trim(),
+        priority:    taskForm.value.priority,
+        status:      taskForm.value.status,
+        due_date:    taskForm.value.due_date || null,
+        description: taskForm.value.description.trim() || null,
+        note:        taskForm.value.note.trim() || null,
       })
     } else {
       await store.addTask({
-        projectId: taskForm.value.projectId,
-        title:     taskForm.value.title.trim(),
-        priority:  taskForm.value.priority,
-        status:    taskForm.value.status,
-        due_date:  taskForm.value.due_date || null,
-        note:      taskForm.value.note.trim() || null,
+        projectId:   taskForm.value.projectId,
+        title:       taskForm.value.title.trim(),
+        priority:    taskForm.value.priority,
+        status:      taskForm.value.status,
+        due_date:    taskForm.value.due_date || null,
+        description: taskForm.value.description.trim() || null,
+        note:        taskForm.value.note.trim() || null,
       })
     }
     taskModal.value = { open: false, task: null }
