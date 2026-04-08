@@ -97,12 +97,12 @@
               </Column>
 
               <!-- Title -->
-              <Column field="title" header="Task" sortable>
+              <Column field="title" header="Task" sortable :pt="{ headerCell: { class: 'text-lg' } }">
                 <template #body="{ data }">
                   <span
-                    class="text-sm"
+                    class="text-lg"
                     :class="data.status === 'completed'
-                      ? 'line-through text-gray-400 dark:text-gray-500'
+                      ? 'line-through text-lg text-gray-400 dark:text-gray-500'
                       : 'text-gray-900 dark:text-gray-100'"
                   >
                     {{ data.title }}
@@ -111,7 +111,7 @@
               </Column>
 
               <!-- Priority -->
-              <Column field="priority" header="Priority" sortable>
+              <Column field="priority" header="Priority" sortable :pt="{ headerCell: { class: 'text-lg' } }">
                 <template #body="{ data }">
                   <span class="text-xs font-medium px-2 py-0.5 rounded" :class="priorityClass(data.priority)">
                     {{ data.priority }}
@@ -120,7 +120,7 @@
               </Column>
 
               <!-- Status -->
-              <Column field="status" header="Status" sortable>
+              <Column field="status" header="Status" sortable :pt="{ headerCell: { class: 'text-lg' } }">
                 <template #body="{ data }">
                   <span class="text-xs font-medium px-2 py-0.5 rounded" :class="statusClass(data.status)">
                     {{ data.status.replace('_', ' ') }}
@@ -129,7 +129,7 @@
               </Column>
 
               <!-- Due date -->
-              <Column field="due_date" header="Due date" sortable>
+              <Column field="due_date" header="Due date" sortable :pt="{ headerCell: { class: 'text-lg' } }">
                 <template #body="{ data }">
                   <span
                     class="text-sm"
@@ -307,7 +307,7 @@
               <textarea
                 v-model="taskForm.description"
                 placeholder="Add a description..."
-                rows="2"
+                rows="5"
                 class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
@@ -352,7 +352,7 @@
               <textarea
                 v-model="taskForm.note"
                 placeholder="Add a note..."
-                rows="2"
+                rows="5"
                 class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
