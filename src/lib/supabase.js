@@ -9,3 +9,4 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 // Create and export the Supabase client
 // This single instance is shared across the entire app
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+

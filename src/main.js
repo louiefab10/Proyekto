@@ -43,7 +43,7 @@ app.use(pinia)
 app.use(router)
 
 app.use(VueSweetalert2)
-app.use(PrimeVue, { theme: { preset: Aura } })
+app.use(PrimeVue, { theme: { preset: Aura, options: { darkModeSelector: '.dark' } } })
 
 // Mount the app to the #app div in index.html
 // This is the entry point that makes everything visible in the browser

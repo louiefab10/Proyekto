@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="px-8 py-8">
+    <div class="px-8 py-8 flex flex-col h-full">
 
       <!-- ── Loading ── -->
       <div v-if="store.loading" class="flex flex-col gap-4">
@@ -67,20 +67,34 @@
         </div>
 
         <!-- ── Tasks tab ── -->
-        <div v-if="activeTab === 'tasks'">
-          <div class="app-table rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+        <div v-if="activeTab === 'tasks'" class="flex-1 min-h-0 flex flex-col">
+          <div class="flex-1 min-h-0">
             <DataTable
+              v-model:filters="filters"
               :value="sortedTasks"
-              unstyled
               sort-mode="single"
+              class="h-full"
+              scrollable
+              scrollHeight="flex"
+              filterDisplay="menu"
+              :globalFilterFields="['title', 'priority', 'status']"
               :sort-field="sortField"
               :sort-order="sortOrder"
               @sort="handleSort"
               @row-click="openTaskModal($event.data)"
-              :pt="{ table: { class: 'w-full' } }"
             >
+              <template #header>
+                <div class="flex justify-end">
+                  <IconField>
+                    <InputIcon>
+                      <i class="pi pi-search" />
+                    </InputIcon>
+                    <InputText v-model="filters['global'].value" placeholder="Search tasks..." />
+                  </IconField>
+                </div>
+              </template>
               <!-- Checkbox -->
-              <Column :pt="{ headerCell: { class: 'w-12 px-4 py-5' }, bodyCell: { class: 'px-4 py-3.5' } }">
+              <Column style="width: 3rem">
                 <template #body="{ data }">
                   <button
                     @click.stop="store.toggleTaskComplete(data)"
@@ -97,12 +111,13 @@
               </Column>
 
               <!-- Title -->
-              <Column field="title" header="Task" sortable :pt="{ headerCell: { class: 'text-lg' } }">
+              <Column field="title" header="Task">
+
                 <template #body="{ data }">
                   <span
-                    class="text-lg"
+                    class="text-sm"
                     :class="data.status === 'completed'
-                      ? 'line-through text-lg text-gray-400 dark:text-gray-500'
+                      ? 'line-through text-gray-400 dark:text-gray-500'
                       : 'text-gray-900 dark:text-gray-100'"
                   >
                     {{ data.title }}
@@ -111,7 +126,15 @@
               </Column>
 
               <!-- Priority -->
-              <Column field="priority" header="Priority" sortable :pt="{ headerCell: { class: 'text-lg' } }">
+              <Column field="priority" header="Priority" :showFilterMatchModes="false">
+                <template #filter="{ filterModel, filterCallback }">
+                  <MultiSelect
+                    v-model="filterModel.value"
+                    @change="filterCallback()"
+                    :options="priorityOptions"
+                    placeholder="Any"
+                  />
+                </template>
                 <template #body="{ data }">
                   <span class="text-xs font-medium px-2 py-0.5 rounded" :class="priorityClass(data.priority)">
                     {{ data.priority }}
@@ -120,7 +143,16 @@
               </Column>
 
               <!-- Status -->
-              <Column field="status" header="Status" sortable :pt="{ headerCell: { class: 'text-lg' } }">
+              <Column field="status" header="Status" :showFilterMatchModes="false">
+                <template #filter="{ filterModel, filterCallback }">
+                  <MultiSelect
+                    v-model="filterModel.value"
+                    @change="filterCallback()"
+                    :options="statusOptions"
+                    placeholder="Any"
+                    :maxSelectedLabels="1"
+                  />
+                </template>
                 <template #body="{ data }">
                   <span class="text-xs font-medium px-2 py-0.5 rounded" :class="statusClass(data.status)">
                     {{ data.status.replace('_', ' ') }}
@@ -129,7 +161,7 @@
               </Column>
 
               <!-- Due date -->
-              <Column field="due_date" header="Due date" sortable :pt="{ headerCell: { class: 'text-lg' } }">
+              <Column field="due_date" header="Due date" sortable >
                 <template #body="{ data }">
                   <span
                     class="text-sm"
@@ -391,6 +423,11 @@ import AppLayout from '../../components/AppLayout.vue'
 import { useProjectDetailStore } from '../../stores/projectDetailStore'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import { FilterMatchMode } from '@primevue/core/api'
+import InputText from 'primevue/inputtext'
+import MultiSelect from 'primevue/multiselect'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 
 const route = useRoute()
 const store = useProjectDetailStore()
@@ -413,9 +450,19 @@ const progressPct    = computed(() =>
 )
 
 // ── Sorting ──
-const sortField     = ref('priority')
+const sortField     = ref(null)
 const sortDirection = ref('desc')
 const sortOrder     = computed(() => sortDirection.value === 'asc' ? 1 : -1)
+
+const filters = ref({
+  global:   { value: null, matchMode: FilterMatchMode.CONTAINS },
+  title:    { value: null, matchMode: FilterMatchMode.CONTAINS },
+  priority: { value: null, matchMode: FilterMatchMode.IN },
+  status:   { value: null, matchMode: FilterMatchMode.IN },
+})
+
+const priorityOptions = ['low', 'medium', 'high', 'urgent']
+const statusOptions   = ['not_started', 'in_progress', 'completed']
 
 const PRIORITY_ORDER = { urgent: 4, high: 3, medium: 2, low: 1 }
 const STATUS_ORDER   = { not_started: 1, in_progress: 2, completed: 3 }
@@ -446,8 +493,8 @@ const sortedTasks = computed(() => {
 function priorityClass(priority) {
   const map = {
     urgent: 'bg-red-950 text-red-300',
-    high:   'bg-red-700 text-red-300',
-    medium: 'bg-indigo-900 text-indigo-300',
+    high:   'bg-red-200 text-red-700 dark:bg-red-700 dark:text-red-200',
+    medium: 'bg-indigo-200 text-indigo-700 dark:bg-indigo-700 dark:text-indigo-100',
     low:    'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
   }
   return map[priority] ?? map.low
@@ -455,8 +502,8 @@ function priorityClass(priority) {
 
 function statusClass(status) {
   const map = {
-    completed:   'bg-green-900 text-green-300',
-    in_progress: 'bg-yellow-900/60 text-yellow-300',
+    completed:   'bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100',
+    in_progress: 'bg-yellow-200/60 text-yellow-900 dark:bg-yellow-900/60 dark:text-yellow-300',
     not_started: 'text-gray-400 dark:text-gray-500',
   }
   return map[status] ?? map.not_started

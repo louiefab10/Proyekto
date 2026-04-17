@@ -1,81 +1,126 @@
 <template>
   <AppLayout>
-    <div class="px-8 pt-8 flex items-center justify-between">
-      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Tasks</h1>
-      <button
-        @click="openTaskModal()"
-        class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-      >
-        <i class="pi pi-plus" />
-        Add new task
-      </button>
-    </div>
-
-    <div class="px-8 py-8">
-      <!-- ── Loading ── -->
-      <div v-if="store.loading" class="flex flex-col gap-4">
-        <div class="h-6 w-48 rounded bg-gray-800 animate-pulse" />
-        <div class="h-8 w-72 rounded bg-gray-800 animate-pulse" />
-        <div class="h-2 w-full rounded bg-gray-800 animate-pulse mt-4" />
+    <div class="flex flex-col h-full">
+      <div class="px-8 pt-8 flex items-center justify-between">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Tasks</h1>
+        <button
+            @click="openTaskModal()"
+            class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        >
+          <i class="pi pi-plus" />
+          Add new task
+        </button>
       </div>
 
-      <template v-else>
-        <div class="app-table rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-          <DataTable
+      <div class="flex-1 min-h-0 px-8 py-8">
+        <DataTable
+            v-model:filters="filters"
+            class="h-full"
             :value="store.tasks"
-            unstyled
+            :loading="store.loading"
             sort-mode="single"
-            :pt="{ table: { class: 'w-full' } }"
+            filterDisplay="menu"
+            :globalFilterFields="['projects.name', 'title', 'priority', 'status']"
+            scrollable
+            scrollHeight="flex"
             @row-click="openTaskModal($event.data)"
-          >
-            <Column field="projects.name" header="Project">
-              <template #body="{ data }">
+        >
+          <template #loading>
+            Loading tasks, please wait...
+          </template>
+          <template #header>
+            <div class="flex justify-end">
+              <IconField>
+                <InputIcon>
+                  <i class="pi pi-search" />
+                </InputIcon>
+                <InputText v-model="filters['global'].value" placeholder="Search tasks..." />
+              </IconField>
+            </div>
+          </template>
+          <Column field="projects.name" header="Project">
+            <template #filter="{ filterModel, filterCallback }">
+              <MultiSelect
+                  v-model="filterModel.value"
+                  @change="filterCallback()"
+                  :options="projectOptions"
+                  optionLabel="name"
+                  optionValue="name"
+                  placeholder="Any"
+                  :maxSelectedLabels="1"
+              />
+            </template>
+
+            <template #body="{ data }">
                 <span class="text-sm text-gray-900 dark:text-gray-100">
                   {{ data.projects?.name ?? '—' }}
                 </span>
-              </template>
-            </Column>
-            <Column field="title" header="Title">
-              <template #body="{ data }">
+            </template>
+          </Column>
+          <Column field="title" header="Title" filterField="title" :showFilterMenu="false">
+
+            <template #body="{ data }">
                 <span
-                  class="text-sm"
-                  :class="data.status === 'completed'
+                    class="text-sm"
+                    :class="data.status === 'completed'
                     ? 'line-through text-gray-400 dark:text-gray-500'
                     : 'text-gray-900 dark:text-gray-100'"
                 >
                   {{ data.title }}
                 </span>
-              </template>
-            </Column>
-            <Column field="priority" header="Priority" sortable>
-              <template #body="{ data }">
+            </template>
+          </Column>
+          <Column field="priority" header="Priority" sortable :showFilterMenu="true">
+            <template #filter="{ filterModel, filterCallback }">
+              <MultiSelect
+                  v-model="filterModel.value"
+                  @change="filterCallback()"
+                  :options="priorityOptions"
+                  placeholder="Any"
+                  :showClear="true"
+              />
+            </template>
+            <template #body="{ data }">
                 <span class="text-xs font-medium px-2 py-0.5 rounded" :class="priorityClass(data.priority)">
                   {{ data.priority }}
                 </span>
-              </template>
-            </Column>
-            <Column field="status" header="Status" sortable>
-              <template #body="{ data }">
+            </template>
+          </Column>
+          <Column field="status" header="Status" :showFilterMatchModes="false">
+            <template #filter="{ filterModel, filterCallback }">
+              <MultiSelect
+                  v-model="filterModel.value"
+                  @change="filterCallback()"
+                  :options="statusOptions"
+                  placeholder="Any"
+                  :showClear="true"
+              />
+            </template>
+            <template #body="{ data }">
                 <span class="text-xs font-medium px-2 py-0.5 rounded" :class="statusClass(data.status)">
                   {{ data.status.replace('_', ' ') }}
                 </span>
-              </template>
-            </Column>
-            <Column field="due_date" header="Due Date" sortable>
-              <template #body="{ data }">
+            </template>
+          </Column>
+          <Column field="due_date" header="Due Date" sortable>
+            <template #body="{ data }">
                 <span
-                  class="text-sm"
-                  :class="data.status !== 'completed' && isOverdue(data.due_date)
+                    class="text-sm"
+                    :class="data.status !== 'completed' && isOverdue(data.due_date)
                     ? 'text-red-400'
                     : 'text-gray-400'"
                 >
                   {{ data.due_date ? formatDate(data.due_date) : '—' }}
                 </span>
-              </template>
-            </Column>
-          </DataTable>
-        </div>
-      </template>
+            </template>
+          </Column>
+          <template #empty>
+            <div class="px-4 py-8 text-center text-sm text-gray-400">
+              No tasks yet — add one to get started.
+            </div>
+          </template>
+        </DataTable>
+      </div>
 
     </div>
 
@@ -201,14 +246,35 @@
 
 <script setup>
 import AppLayout from '../components/AppLayout.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useTaskStore } from "../stores/taskStore.js"
 import { useProjectsStore } from "../stores/projectsStore.js"
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import { FilterMatchMode } from '@primevue/core/api'
+import InputText from 'primevue/inputtext'
+import MultiSelect from 'primevue/multiselect'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
+
 
 const store = useTaskStore()
 const projectsStore = useProjectsStore()
+
+const filters = ref({
+  global:          { value: null, matchMode: FilterMatchMode.CONTAINS },
+  'projects.name': { value: null, matchMode: FilterMatchMode.IN },
+  title:           { value: null, matchMode: FilterMatchMode.STARTS_WITH },
+  priority:        { value: null, matchMode: FilterMatchMode.EQUALS },
+  status:          { value: null, matchMode: FilterMatchMode.IN },
+})
+
+const priorityOptions = ['low', 'medium', 'high', 'urgent']
+const statusOptions   = ['not_started', 'in_progress', 'completed']
+
+const projectOptions = computed(() =>
+    projectsStore.projects.map(p => ({ name: p.name }))
+)
 
 onMounted(() => {
   store.fetchTasks()
@@ -260,8 +326,8 @@ async function submitTaskModal() {
 function priorityClass(priority) {
   const map = {
     urgent: 'bg-red-950 text-red-300',
-    high:   'bg-red-700 text-red-300',
-    medium: 'bg-indigo-900 text-indigo-300',
+    high:   'bg-red-200 text-red-700 dark:bg-red-700 dark:text-red-200',
+    medium: 'bg-indigo-200 text-indigo-700 dark:bg-indigo-700 dark:text-indigo-100',
     low:    'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
   }
   return map[priority] ?? map.low
@@ -269,8 +335,8 @@ function priorityClass(priority) {
 
 function statusClass(status) {
   const map = {
-    completed:   'bg-green-900 text-green-300',
-    in_progress: 'bg-yellow-900/60 text-yellow-300',
+    completed:   'bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100',
+    in_progress: 'bg-yellow-200/60 text-yellow-900 dark:bg-yellow-900/60 dark:text-yellow-300',
     not_started: 'text-gray-400 dark:text-gray-500',
   }
   return map[status] ?? map.not_started

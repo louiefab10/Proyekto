@@ -62,7 +62,7 @@
     </aside>
 
     <!-- ── Main content ── -->
-    <main class="flex-1 overflow-auto pb-16 md:pb-0">
+    <main class="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0">
       <slot />
     </main>
 
