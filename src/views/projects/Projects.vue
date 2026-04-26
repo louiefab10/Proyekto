@@ -2,7 +2,7 @@
   <AppLayout>
 
     <!-- ── Page header ── -->
-    <div class="flex items-start justify-between px-8 pt-8 pb-6">
+    <div class="flex items-start justify-between px-4 md:px-8 pt-6 md:pt-8 pb-6">
       <div>
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Projects</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
@@ -19,7 +19,7 @@
     </div>
 
     <!-- ── Loading skeleton ── -->
-    <div v-if="projectsStore.loading" class="px-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div v-if="projectsStore.loading" class="px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       <div v-for="i in 3" :key="i" class="h-52 rounded-xl bg-gray-100 dark:bg-gray-800/50 animate-pulse" />
     </div>
 
@@ -48,7 +48,7 @@
     </div>
 
     <!-- ── Project grid ── -->
-    <div v-else class="px-8 pb-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div v-else class="px-4 md:px-8 pb-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       <div
         v-for="project in projectsStore.projects"
         :key="project.id"

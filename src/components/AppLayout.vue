@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
+  <div class="flex h-[100dvh] bg-gray-50 dark:bg-gray-950 overflow-hidden">
 
     <!-- ── Sidebar (desktop only) ── -->
     <aside class="hidden md:flex w-72 shrink-0 flex-col bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800">
@@ -49,7 +49,7 @@
         <button
           @click="handleSignOut"
           title="Sign out"
-          class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          class="w-11 h-11 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
