@@ -20,6 +20,10 @@ import Aura from '@primeuix/themes/aura'
 import 'primeicons/primeicons.css'
 
 
+// Prevent pinch-to-zoom on iOS Safari (ignores user-scalable=no since iOS 10)
+document.addEventListener('gesturestart', e => e.preventDefault())
+document.addEventListener('gesturechange', e => e.preventDefault())
+
 // Apply dark mode class based on system preference
 if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
     document.documentElement.classList.add('dark')

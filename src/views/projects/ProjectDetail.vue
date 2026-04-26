@@ -305,7 +305,7 @@
         </div>
 
         <!-- ── Notes tab ── -->
-        <div v-else-if="activeTab === 'notes'">
+        <div v-else-if="activeTab === 'notes'" class="flex-1 min-h-0 overflow-y-auto">
           <div class="flex justify-end mb-4">
             <button
               @click="showAddNote = !showAddNote"
@@ -372,7 +372,7 @@
         </div>
 
         <!-- ── Tags tab ── -->
-        <div v-else-if="activeTab === 'tags'">
+        <div v-else-if="activeTab === 'tags'" class="flex-1 min-h-0 overflow-y-auto">
 
           <!-- Applied tags -->
           <div class="mb-8">
