@@ -175,6 +175,14 @@
                   >
             {{ formatDate(task.due_date) }}
           </span>
+                  <span
+                      v-for="tt in task.task_tags"
+                      :key="tt.tag_id"
+                      class="text-xs font-medium px-2 py-0.5 rounded-full"
+                      :style="{ backgroundColor: tt.tags.color + '33', color: tt.tags.color }"
+                  >
+                    {{ tt.tags.name }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -350,20 +358,62 @@
               :key="note.id"
               class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4"
             >
-              <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
-                {{ note.content }}
-              </p>
-              <div class="flex items-center justify-between mt-3">
-                <span class="text-xs text-gray-400">
-                  {{ new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
-                </span>
-                <button
-                  @click="store.deleteNote(note.id)"
-                  class="text-xs text-gray-400 hover:text-red-400 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
+              <!-- View mode -->
+              <template v-if="editingNoteId !== note.id">
+                <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                  {{ note.content }}
+                </p>
+                <p v-if="note.tasks?.title" class="text-xs text-blue-400 mt-2">
+                  🔗 {{ note.tasks.title }}
+                </p>
+                <div class="flex items-center justify-between mt-3">
+                  <span class="text-xs text-gray-400">
+                    {{ new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                  </span>
+                  <div class="flex items-center gap-3">
+                    <button
+                      @click="startEditNote(note)"
+                      class="text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      @click="store.deleteNote(note.id)"
+                      class="text-xs text-gray-400 hover:text-red-400 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Edit mode -->
+              <template v-else>
+                <textarea
+                  v-model="editingNoteContent"
+                  rows="4"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  @keydown.ctrl.enter="submitEditNote(note.id)"
+                  @keydown.meta.enter="submitEditNote(note.id)"
+                />
+                <div class="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                  <button
+                    type="button"
+                    @click="cancelEditNote"
+                    class="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    @click="submitEditNote(note.id)"
+                    :disabled="!editingNoteContent.trim()"
+                    class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save
+                  </button>
+                </div>
+              </template>
             </div>
           </div>
           <p v-else-if="!showAddNote" class="text-sm text-gray-400 text-center py-12">
@@ -436,80 +486,119 @@
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
         @click.self="taskModal.open = false"
       >
-        <div class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl p-6">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-5">
-            {{ taskModal.task ? 'Edit task' : 'Add task' }}
-          </h2>
+        <div class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl flex flex-col max-h-[90dvh]">
 
-          <form @submit.prevent="submitTaskModal" class="flex flex-col gap-4">
+          <!-- Fixed header -->
+          <div class="px-6 pt-6 pb-4 shrink-0">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ taskModal.task ? 'Edit task' : 'Add task' }}
+            </h2>
+          </div>
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Title <span class="text-red-400">*</span></label>
-              <input
-                v-model="taskForm.title"
-                type="text"
-                placeholder="Task title"
-                autofocus
-                class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <form @submit.prevent="submitTaskModal" class="flex flex-col flex-1 min-h-0">
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Description <span class="text-gray-600">(optional)</span></label>
-              <textarea
-                v-model="taskForm.description"
-                placeholder="Add a description..."
-                rows="5"
-                class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y overflow-auto"
-              />
-            </div>
+            <!-- Scrollable fields -->
+            <div class="flex-1 min-h-0 overflow-y-auto px-6 flex flex-col gap-4 pb-2">
 
-            <div class="grid grid-cols-2 gap-3">
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Priority</label>
-                <select
-                  v-model="taskForm.priority"
-                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Title <span class="text-red-400">*</span></label>
+                <input
+                  v-model="taskForm.title"
+                  type="text"
+                  placeholder="Task title"
+                  autofocus
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
+
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Status</label>
-                <select
-                  v-model="taskForm.status"
-                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="not_started">Not started</option>
-                  <option value="in_progress">In progress</option>
-                  <option value="completed">Completed</option>
-                </select>
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Description <span class="text-gray-600">(optional)</span></label>
+                <textarea
+                  v-model="taskForm.description"
+                  placeholder="Add a description..."
+                  rows="3"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                />
               </div>
-            </div>
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Due date</label>
-              <input
-                v-model="taskForm.due_date"
-                type="date"
-                class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Priority</label>
+                  <select
+                    v-model="taskForm.priority"
+                    class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Status</label>
+                  <select
+                    v-model="taskForm.status"
+                    class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="not_started">Not started</option>
+                    <option value="in_progress">In progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
 
-            <div class="flex flex-col gap-1.5">
-              <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Note <span class="text-gray-600">(optional)</span></label>
-              <textarea
-                v-model="taskForm.note"
-                placeholder="Add a note..."
-                rows="5"
-                class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y overflow-auto"
-              />
-            </div>
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Due date</label>
+                <input
+                  v-model="taskForm.due_date"
+                  type="date"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-            <div class="flex items-center justify-end gap-2 pt-1">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Note <span class="text-gray-600">(optional)</span></label>
+                <textarea
+                  v-model="taskForm.note"
+                  placeholder="Add a note..."
+                  rows="3"
+                  class="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                />
+              </div>
+
+              <!-- Tags -->
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wide">Tags</label>
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="tag in taskForm.tags"
+                    :key="tag.id"
+                    class="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full cursor-pointer"
+                    :style="{ backgroundColor: tag.color + '33', color: tag.color }"
+                    @click="toggleModalTag(tag)"
+                  >
+                    {{ tag.name }} <span class="opacity-60 leading-none">×</span>
+                  </span>
+                  <button
+                    v-for="tag in availableModalTags"
+                    :key="tag.id"
+                    type="button"
+                    @click="toggleModalTag(tag)"
+                    class="text-xs font-medium px-2.5 py-1 rounded-full border border-dashed transition-colors hover:opacity-80"
+                    :style="{ borderColor: tag.color, color: tag.color }"
+                  >
+                    + {{ tag.name }}
+                  </button>
+                  <span v-if="store.allUserTags.length === 0" class="text-xs text-gray-400">
+                    No tags yet. Create some in the Tags section.
+                  </span>
+                </div>
+              </div>
+
+            </div><!-- end scrollable fields -->
+
+            <!-- Fixed footer -->
+            <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0 flex items-center justify-end gap-2">
               <button
                 type="button"
                 @click="taskModal.open = false"
@@ -521,10 +610,9 @@
                 type="submit"
                 :disabled="!taskForm.title.trim()"
                 class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-
               >
                 <i class="pi pi-save" />
-                {{ taskSaving ? 'Saving...' : (taskModal.task ? 'Save changes' : 'Add task')}}
+                {{ taskSaving ? 'Saving...' : (taskModal.task ? 'Save changes' : 'Add task') }}
               </button>
             </div>
 
@@ -619,6 +707,24 @@
               </button>
             </div>
           </div>
+
+          <!-- Tags -->
+          <div v-if="store.allUserTags.length > 0">
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Tags</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="tag in store.allUserTags"
+                :key="tag.id"
+                @click="toggleFilter(mobileTag, tag.id)"
+                class="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors"
+                :class="mobileTag.includes(tag.id)
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'"
+              >
+                {{ tag.name }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </Teleport>
@@ -684,6 +790,7 @@ const mobileSortField  = ref('')          // '' | 'due_date' | 'priority'
 const mobileSortDir    = ref('asc')       // 'asc' | 'desc'
 const mobilePriority   = ref([])          // e.g. ['high', 'urgent']
 const mobileStatus     = ref([])          // e.g. ['not_started']
+const mobileTag        = ref([])          // e.g. ['tag-id-1']
 
 const sortOptions = [
   { label: 'Due date', value: 'due_date' },
@@ -691,7 +798,7 @@ const sortOptions = [
 ]
 
 const activeFilterCount = computed(() =>
-    mobilePriority.value.length + mobileStatus.value.length
+    mobilePriority.value.length + mobileStatus.value.length + mobileTag.value.length
 )
 
 
@@ -712,6 +819,10 @@ const filteredTasks = computed(() => {
 
   if (mobileStatus.value.length > 0)
     tasks = tasks.filter(t => mobileStatus.value.includes(t.status))
+
+  // Tag filter
+  if (mobileTag.value.length > 0)
+    tasks = tasks.filter(t => t.task_tags?.some(tt => mobileTag.value.includes(tt.tag_id)))
 
   if (mobileSortField.value) {
     const dir = mobileSortDir.value === 'asc' ? 1 : -1
@@ -782,38 +893,78 @@ const taskSaving = ref(false)
 
 // ── Task modal ──
 const taskModal = ref({ open: false, task: null })
-const taskForm  = ref({ title: '', priority: '', status: '', due_date: '', description: '', note: '' })
+const taskForm  = ref({ title: '', priority: '', status: '', due_date: '', description: '', note: '', noteId: null, tags: [] })
 
 function openTaskModal(task = null) {
   taskModal.value = { open: true, task }
+  const latestNote = task ? store.notes.find(n => n.task_id === task.id) ?? null : null
   taskForm.value = task
-    ? { title: task.title, priority: task.priority, status: task.status, due_date: task.due_date ?? '', description: task.description ?? '', note: task.note ?? '' }
-    : { title: '', priority: '', status: '', due_date: '', description: '', note: '' }
+      ? { title: task.title, priority: task.priority, status: task.status, due_date: task.due_date ?? '', description: task.description ?? '', note: latestNote?.content ?? '', noteId: latestNote?.id ?? null, tags: (task.task_tags ?? []).map(tt => tt.tags) }
+      : { title: '', priority: '', status: '', due_date: '', description: '', note: '', noteId: null, tags: [] }
+}
+
+const availableModalTags = computed(() =>
+    store.allUserTags.filter(t => !taskForm.value.tags.find(st => st.id === t.id))
+)
+
+function toggleModalTag(tag) {
+  const idx = taskForm.value.tags.findIndex(t => t.id === tag.id)
+  if (idx !== -1) taskForm.value.tags.splice(idx, 1)
+  else taskForm.value.tags.push(tag)
 }
 
 async function submitTaskModal() {
   if (!taskForm.value.title.trim()) return
-  const payload = {
-    title:       taskForm.value.title.trim(),
-    priority:    taskForm.value.priority,
-    status:      taskForm.value.status,
-    due_date:    taskForm.value.due_date || null,
-    description: taskForm.value.description.trim() || null,
-    note:        taskForm.value.note.trim() || null,
-  }
   taskSaving.value = true
   try {
+    const noteContent = taskForm.value.note.trim()
+
     if (taskModal.value.task) {
-      await store.updateTask(taskModal.value.task.id, payload)
+      await store.updateTask(taskModal.value.task.id, {
+        title:       taskForm.value.title.trim(),
+        priority:    taskForm.value.priority,
+        status:      taskForm.value.status,
+        due_date:    taskForm.value.due_date || null,
+        description: taskForm.value.description.trim() || null,
+      })
+      if (noteContent) {
+        if (taskForm.value.noteId) {
+          await store.updateNote(taskForm.value.noteId, noteContent)
+        } else {
+          await store.addNote(noteContent, taskModal.value.task.id)
+        }
+      }
+      // sync tags
+      const originalTagIds = new Set((taskModal.value.task.task_tags ?? []).map(tt => tt.tag_id))
+      const newTagIds = new Set(taskForm.value.tags.map(t => t.id))
+      for (const tag of taskForm.value.tags) {
+        if (!originalTagIds.has(tag.id)) await store.addTaskTag(taskModal.value.task.id, tag)
+      }
+      for (const tt of (taskModal.value.task.task_tags ?? [])) {
+        if (!newTagIds.has(tt.tag_id)) await store.removeTaskTag(taskModal.value.task.id, tt.tag_id)
+      }
     } else {
-      await store.addTask(payload)
+      const { data: newTask } = await store.addTask({
+        title:       taskForm.value.title.trim(),
+        priority:    taskForm.value.priority,
+        status:      taskForm.value.status,
+        due_date:    taskForm.value.due_date || null,
+        description: taskForm.value.description.trim() || null,
+      })
+      if (noteContent && newTask) {
+        await store.addNote(noteContent, newTask.id)
+      }
+      // apply tags to newly created task
+      if (newTask) {
+        for (const tag of taskForm.value.tags) {
+          await store.addTaskTag(newTask.id, tag)
+        }
+      }
     }
     taskModal.value = { open: false, task: null }
-  }
-  finally{
+  } finally {
     taskSaving.value = false
   }
-
 }
 
 // ── Add note ──
@@ -825,6 +976,26 @@ async function submitAddNote() {
   await store.addNote(newNoteContent.value.trim())
   showAddNote.value    = false
   newNoteContent.value = ''
+}
+
+// ── Edit note ──
+const editingNoteId      = ref(null)
+const editingNoteContent = ref('')
+
+function startEditNote(note) {
+  editingNoteId.value      = note.id
+  editingNoteContent.value = note.content
+}
+
+function cancelEditNote() {
+  editingNoteId.value      = null
+  editingNoteContent.value = ''
+}
+
+async function submitEditNote(noteId) {
+  if (!editingNoteContent.value.trim()) return
+  await store.updateNote(noteId, editingNoteContent.value.trim())
+  cancelEditNote()
 }
 
 // ── Available tags (not yet on this project) ──
@@ -851,6 +1022,7 @@ function toggleSort(field) {
 function clearMobileFilters() {
   mobilePriority.value = []
   mobileStatus.value   = []
+  mobileTag.value      = []
 }
 
 </script>

@@ -16,3 +16,11 @@ html, body, #app {
 
 @variant dark (&:where(.dark, .dark *));
 
+/* Force date inputs to respect container width on iOS Safari */
+input[type="date"] {
+  display: block;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+

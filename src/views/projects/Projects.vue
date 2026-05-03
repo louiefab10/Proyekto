@@ -19,6 +19,30 @@
       </button>
     </div>
 
+    <!-- ── Tag filter pills ── -->
+    <div v-if="tagsStore.tags.length > 0" class="px-4 md:px-8 pb-4 shrink-0 flex flex-wrap gap-2">
+      <button
+        @click="selectedTagId = null"
+        class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+        :class="!selectedTagId
+          ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'"
+      >
+        All
+      </button>
+      <button
+        v-for="tag in tagsStore.tags"
+        :key="tag.id"
+        @click="selectedTagId = selectedTagId === tag.id ? null : tag.id"
+        class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+        :class="selectedTagId === tag.id
+          ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'"
+      >
+        {{ tag.name }}
+      </button>
+    </div>
+
     <!-- ── Scrollable content area ── -->
     <div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-8 pb-8">
 
@@ -54,7 +78,7 @@
     <!-- ── Project grid ── -->
     <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       <div
-        v-for="project in projectsStore.projects"
+        v-for="project in filteredProjects"
         :key="project.id"
         @click="router.push(`/projects/${project.id}`)"
         class="group flex flex-col gap-3 p-5 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 cursor-pointer transition-colors"
@@ -207,15 +231,30 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLayout from '../../components/AppLayout.vue'
 import { useProjectsStore } from '../../stores/projectsStore'
+import { useTagsStore } from '../../stores/tagsStore'
 
 const router = useRouter()
 const projectsStore = useProjectsStore()
+const tagsStore = useTagsStore()
 
-onMounted(() => projectsStore.fetchProjects())
+onMounted(() => {
+  projectsStore.fetchProjects()
+  tagsStore.fetchTags()
+})
 
 const activeCount = computed(
   () => projectsStore.projects.filter(p => p.status === 'active').length
 )
+
+// ── Tag filter ──
+const selectedTagId = ref(null)
+
+const filteredProjects = computed(() => {
+  if (!selectedTagId.value) return projectsStore.projects
+  return projectsStore.projects.filter(p =>
+    p.tags.some(t => t.id === selectedTagId.value)
+  )
+})
 
 function statusStyle(status) {
   const map = {

@@ -25,8 +25,8 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
             { data: tagData },
         ] = await Promise.all([
             supabase.from('projects').select('*').eq('id', id).single(),
-            supabase.from('tasks').select('*').eq('project_id', id).order('created_at', { ascending: true }),
-            supabase.from('notes').select('*').eq('project_id', id).order('created_at', { ascending: false }),
+            supabase.from('tasks').select('*, task_tags(tag_id, tags(*))').eq('project_id', id).order('created_at', { ascending: true }),
+            supabase.from('notes').select('*, tasks(title)').eq('project_id', id).order('created_at', { ascending: false }),
             supabase.from('project_tags').select('tag_id, tags(*)').eq('project_id', id),
             supabase.from('tags').select('*').eq('user_id', authStore.user.id).order('name'),
         ])
@@ -41,7 +41,7 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
 
     // ── Task functions ──
 
-    async function addTask({ title, priority = 'medium', status = 'not_started', due_date = null, description = null, note = null }) {
+    async function addTask({ title, priority = 'medium', status = 'not_started', due_date = null, description = null }) {
         const authStore = useAuthStore()
         const { data, error } = await supabase
             .from('tasks')
@@ -53,9 +53,8 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
                 status,
                 due_date,
                 description,
-                note,
             })
-            .select()
+            .select('*, task_tags(tag_id, tags(*))')
             .single()
 
         if (!error && data) tasks.value.push(data)
@@ -100,10 +99,25 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
                 content,
                 task_id: taskId,
             })
-            .select()
+            .select('*, tasks(title)')
             .single()
 
-        if (!error && data) notes.value.unshift(data) // newest first
+        if (!error && data) notes.value.unshift(data)
+        return { error }
+    }
+
+    async function updateNote(noteId, content) {
+        const { data, error } = await supabase
+            .from('notes')
+            .update({ content })
+            .eq('id', noteId)
+            .select('*, tasks(title)')
+            .single()
+
+        if (!error && data) {
+            const idx = notes.value.findIndex(n => n.id === noteId)
+            if (idx !== -1) notes.value[idx] = data
+        }
         return { error }
     }
 
@@ -113,7 +127,7 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
         return { error }
     }
 
-    // ── Tag functions ──
+    // ── Project tag functions ──
 
     async function addProjectTag(tagId) {
         const { error } = await supabase
@@ -138,11 +152,40 @@ export const useProjectDetailStore = defineStore('projectDetail', () => {
         return { error }
     }
 
+    // ── Task tag functions ──
+
+    async function addTaskTag(taskId, tag) {
+        const { error } = await supabase
+            .from('task_tags')
+            .insert({ task_id: taskId, tag_id: tag.id })
+
+        if (!error) {
+            const task = tasks.value.find(t => t.id === taskId)
+            if (task) task.task_tags = [...(task.task_tags ?? []), { tag_id: tag.id, tags: tag }]
+        }
+        return { error }
+    }
+
+    async function removeTaskTag(taskId, tagId) {
+        const { error } = await supabase
+            .from('task_tags')
+            .delete()
+            .eq('task_id', taskId)
+            .eq('tag_id', tagId)
+
+        if (!error) {
+            const task = tasks.value.find(t => t.id === taskId)
+            if (task) task.task_tags = task.task_tags.filter(tt => tt.tag_id !== tagId)
+        }
+        return { error }
+    }
+
     return {
         project, tasks, notes, projectTags, allUserTags, loading,
         fetchProject,
         addTask, updateTask, toggleTaskComplete, deleteTask,
-        addNote, deleteNote,
+        addNote, updateNote, deleteNote,
         addProjectTag, removeProjectTag,
+        addTaskTag, removeTaskTag,
     }
 })
