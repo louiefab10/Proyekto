@@ -254,14 +254,13 @@
 </template>
 
 <script setup>
-import { ref, watch, getCurrentInstance } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore'
 import ThemeToggle from '../../components/ThemeToggle.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
-const { proxy } = getCurrentInstance()
 
 // ── View state ──
 // Controls which panel is shown: 'login' | 'signup' | 'forgot-password' | 'check-email'
@@ -305,14 +304,6 @@ async function handleSignIn() {
   loading.value = false
   if (error) { formError.value = error.message; return }
 
-  proxy.$swal({
-    icon: 'success',
-    title: 'Welcome back!',
-    theme: 'auto',
-    position: 'center',
-    showConfirmButton: false,
-    timer: 2000,
-  })
 
   router.push('/projects')
 }

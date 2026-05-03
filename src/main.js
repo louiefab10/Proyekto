@@ -13,8 +13,6 @@ import { createPinia } from 'pinia'
 // Import our global CSS file which includes Tailwind
 import './style.css'
 
-import VueSweetalert2 from 'vue-sweetalert2'
-import 'sweetalert2/dist/sweetalert2.min.css'
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 import 'primeicons/primeicons.css'
@@ -46,7 +44,6 @@ app.use(pinia)
 // Register Vue Router with the app
 app.use(router)
 
-app.use(VueSweetalert2)
 app.use(PrimeVue, { theme: { preset: Aura, options: { darkModeSelector: '.dark' } } })
 
 // Mount the app to the #app div in index.html

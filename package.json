@@ -23,10 +23,12 @@
     "vue-sweetalert2": "^5.0.11"
   },
   "devDependencies": {
+    "@vite-pwa/assets-generator": "^1.0.2",
     "@vitejs/plugin-vue": "^6.0.5",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "vite-plugin-pwa": "^1.2.0"
   }
 }

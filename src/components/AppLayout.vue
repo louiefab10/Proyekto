@@ -136,33 +136,29 @@
       </div>
     </Teleport>
 
+    <!-- ── PWA install banner ── -->
+    <PwaInstallBanner />
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, getCurrentInstance } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import ThemeToggle from './ThemeToggle.vue'
+import PwaInstallBanner from './PwaInstallBanner.vue'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const { proxy } = getCurrentInstance()
 
 const accountSheet = ref(false)
 
 async function handleSignOut() {
-  const result = await proxy.$swal({
-    title: 'Sign out?',
-    text: 'You will be returned to the login page.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Sign out',
-    cancelButtonText: 'Cancel',
-  })
+  const confirmed = window.confirm('Sign out? You will be returned to the login page.')
 
-  if (result.isConfirmed) {
+  if (confirmed) {
     await authStore.signOut()
     router.push('/login')
   }

@@ -198,12 +198,11 @@
 </template>
 
 <script setup>
-import { ref, getCurrentInstance, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import AppLayout from '../components/AppLayout.vue'
 import { useTagsStore } from '../stores/tagsStore'
 
 const store = useTagsStore()
-const { proxy } = getCurrentInstance()
 
 onMounted(() => store.fetchTags())
 
@@ -254,15 +253,8 @@ async function submitEdit(id) {
 
 // ── Delete tag ──
 async function handleDelete(tag) {
-  const result = await proxy.$swal({
-    title: `Delete "${tag.name}"?`,
-    text: 'This will remove the tag from all projects and tasks.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Delete',
-    cancelButtonText: 'Cancel',
-  })
-  if (result.isConfirmed) await store.deleteTag(tag.id)
+  const confirmed = window.confirm(`Delete "${tag.name}"? This will remove the tag from all projects and tasks.`)
+  if (confirmed) await store.deleteTag(tag.id)
 }
 
 // ── Usage label ──
