@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=no"  />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>proyekto</title>
       <meta name="description" content="Track tasks, take notes, and stay organized." />
       <meta name="theme-color" content="#3B82F6" />
@@ -12,9 +12,77 @@
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       <meta name="apple-mobile-web-app-title" content="proyekto" />
+    <style>
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f9fafb;
+        gap: 12px;
+      }
+      .dark #boot-splash { background: #030712; }
+      .splash-logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: #dbeafe;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .dark .splash-logo { background: #172554; }
+      .splash-name {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        letter-spacing: -0.01em;
+      }
+      .dark .splash-name { color: #ffffff; }
+      .splash-dots { display: flex; gap: 5px; margin-top: 4px; }
+      .splash-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #3B82F6;
+        animation: splash-pulse 1.2s ease-in-out infinite;
+      }
+      .splash-dot:nth-child(2) { animation-delay: 0.15s; }
+      .splash-dot:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes splash-pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.3; transform: scale(0.75); }
+      }
+    </style>
+    <script>
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div id="boot-splash">
+        <div class="splash-logo">
+          <svg width="30" height="30" viewBox="0 0 18 18" fill="none">
+            <rect x="2" y="2" width="6" height="6" rx="1.5" fill="#3B82F6"/>
+            <rect x="10" y="2" width="6" height="6" rx="1.5" fill="#3B82F6" opacity="0.6"/>
+            <rect x="2" y="10" width="6" height="6" rx="1.5" fill="#3B82F6" opacity="0.6"/>
+            <rect x="10" y="10" width="6" height="6" rx="1.5" fill="#3B82F6" opacity="0.3"/>
+          </svg>
+        </div>
+        <span class="splash-name">proyekto</span>
+        <div class="splash-dots">
+          <span class="splash-dot"></span>
+          <span class="splash-dot"></span>
+          <span class="splash-dot"></span>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

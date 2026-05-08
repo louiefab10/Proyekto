@@ -22,16 +22,6 @@ import 'primeicons/primeicons.css'
 document.addEventListener('gesturestart', e => e.preventDefault())
 document.addEventListener('gesturechange', e => e.preventDefault())
 
-// Apply dark mode class based on system preference
-if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.classList.add('dark')
-}
-
-// Listen for system dark mode changes
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-    document.documentElement.classList.toggle('dark', e.matches)
-})
-
 // Create the Vue app instance
 const app = createApp(App)
 

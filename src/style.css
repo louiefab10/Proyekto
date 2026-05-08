@@ -16,6 +16,20 @@ html, body, #app {
 
 @variant dark (&:where(.dark, .dark *));
 
+/* Safe area utilities for PWA / notched phones */
+.pt-safe-header {
+  padding-top: max(env(safe-area-inset-top), 1.5rem);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pb-safe-nav {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+.bottom-safe-nav {
+  bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+
 /* Force date inputs to respect container width on iOS Safari */
 input[type="date"] {
   display: block;

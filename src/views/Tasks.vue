@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <div class="flex flex-col h-full">
-      <div class="px-4 md:px-8 pt-6 md:pt-8 flex items-center justify-between">
+      <div class="px-4 md:px-8 pt-safe-header md:pt-8 flex items-center justify-between">
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Tasks</h1>
         <button
             @click="openTaskModal()"

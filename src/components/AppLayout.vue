@@ -62,12 +62,12 @@
     </aside>
 
     <!-- ── Main content ── -->
-    <main class="flex-1 overflow-hidden flex flex-col pb-16 md:pb-0">
+    <main class="flex-1 overflow-hidden flex flex-col pb-safe-nav md:pb-0">
       <slot />
     </main>
 
     <!-- ── Bottom nav (mobile only) ── -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 flex md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+    <nav class="fixed bottom-0 left-0 right-0 z-40 flex md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 pb-safe">
       <RouterLink
         v-for="item in navItems"
         :key="item.path"
@@ -105,7 +105,7 @@
       />
       <div
         v-if="accountSheet"
-        class="fixed bottom-16 left-3 right-3 z-40 md:hidden bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl p-4"
+        class="fixed bottom-safe-nav left-3 right-3 z-40 md:hidden bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl p-4"
       >
         <!-- User row -->
         <div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-100 dark:border-gray-800">
