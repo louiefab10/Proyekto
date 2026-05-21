@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="px-4 md:px-8 py-4 md:py-8 flex flex-col h-full">
+    <div class="px-4 md:px-8 pt-safe-header md:pt-8 pb-4 md:pb-8 flex flex-col h-full">
 
       <!-- ── Loading ── -->
       <div v-if="store.loading" class="flex flex-col gap-4">

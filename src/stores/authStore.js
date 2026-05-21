@@ -21,8 +21,15 @@ export const useAuthStore = defineStore('auth', () => {
 
     // Function to initialize the auth state when the app loads
     async function init() {
-        // Get the current session from Supabase
-        const { data: { session } } = await supabase.auth.getSession()
+        // Wait for both the session check and a minimum splash duration.
+        // Without the timer, the service worker serves everything from cache so
+        // fast that the splash screen is gone before the first frame — invisible
+        // in the PWA even though it renders. 600ms is enough to be noticeable
+        // without feeling slow.
+        const [{ data: { session } }] = await Promise.all([
+            supabase.auth.getSession(),
+            new Promise(resolve => setTimeout(resolve, 600)),
+        ])
 
         // Set the user from the session if one exists
         user.value = session?.user ?? null
